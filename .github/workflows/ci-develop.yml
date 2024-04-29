@@ -1,0 +1,49 @@
+name: Deploy meiliadmin develop to GCS
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "development" branch
+  push:
+    branches: [develop]
+  pull_request:
+    branches: [develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Node 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: npm
+
+      - name: Development build of meiliadmin app
+        env:
+          ROOTURL: ${{ vars.DEV_ROOTURL }}
+          MEILI_API_URL: ${{ vars.DEV_MEILI_API_URL }}
+          MEILI_MASTER_KEY: ${{ vars.DEV_MEILI_MASTER_KEY }}
+        run: |
+          yarn
+          yarn build
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCS_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0
+
+      - name: Sync static folder at GCS bucket
+        run: gsutil rsync -d -r ./dist gs://${{ vars.DEV_DOMAIN }}
