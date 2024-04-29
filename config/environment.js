@@ -1,10 +1,15 @@
 'use strict';
 
 module.exports = function (environment) {
+  const DEV = environment === 'development'; // process.env.EMBER_ENV
+
+  // EMBER_ENV
+  if (DEV) console.log('process.env.EMBER_ENV:', process.env.EMBER_ENV);
+
   const ENV = {
     modulePrefix: 'meiliadmin',
     environment,
-    rootURL: '/',
+    rootURL: process.env.ROOTURL ?? '/',
     locationType: 'history',
     EmberENV: {
       EXTEND_PROTOTYPES: false,
@@ -17,10 +22,10 @@ module.exports = function (environment) {
     APP: {
       // Here you can pass flags/options to your application instance
       // when it is created
-      // meilisearch: {
-      //   url: 'http://localhost:7700',
-      //   key: 'MASTER_KEY',
-      // },
+      meilisearch: {
+         url: process.env.MEILI_API_URL ?? 'http://localhost:7700',
+         key: process.env.MEILI_MASTER_KEY ?? 'key-long-very-nice-very-not-some',
+      },
     },
   };
 
@@ -53,6 +58,8 @@ module.exports = function (environment) {
       ENV.rootURL = process.env.ROOTURL;
     }
   }
+
+  if (DEV) console.log('ENV:', ENV);
 
   return ENV;
 };
